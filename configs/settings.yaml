@@ -1,0 +1,168 @@
+influxdb:
+  url: "http://localhost:8086"
+  token: "3oqYo8mzYtBEkU-QdDIc4ydrSM50lanDQRbL1t-DCLlGL9vR68B5arJ_KGkgI6jQ9cnk74mJzcS4baE63mLQ2Q=="
+  org: "ELECSOL"
+  bucket: "ELEC1"
+  timeout: 10000  # milliseconds
+
+mqtt:
+  broker: "localhost"
+  port: 1883
+  topic: "factory/sensors"
+  client_id: "scada_ingestor"
+  qos: 1
+  reconnect_min_delay: 1    # seconds
+  reconnect_max_delay: 60   # seconds
+  # username/password loaded from MQTT_USER / MQTT_PASS env variables
+
+scada:
+  host: "0.0.0.0"
+  port: 8000
+  measurement: "machine_metrics"
+  alarm_measurement: "alarms"
+
+alarms:
+  rules:
+    temperature:
+      high: 85
+      severity: "HIGH"
+    vibration:
+      high: 7
+      severity: "HIGH"
+    pressure:
+      low: 32
+      severity: "MEDIUM"
+  severity_order:
+    - "CRITICAL"
+    - "HIGH"
+    - "MEDIUM"
+    - "LOW"
+    - "INFO"
+
+auth:
+  secret_key: "change-me-in-production"  # Override with AUTH_SECRET_KEY env
+  algorithm: "HS256"
+  token_expire_minutes: 480  # 8 hours — typical shift length
+  default_admin:
+    username: "admin"
+    # Password loaded from ADMIN_PASSWORD env variable, default: admin123
+    role: "ADMIN"
+
+simulator:
+  machines:
+    - id: "MOTOR_1"
+      temperature_range: [60, 90]
+      vibration_range: [2, 8]
+      pressure_range: [30, 50]
+    - id: "PUMP_1"
+      temperature_range: [40, 75]
+      vibration_range: [1, 6]
+      pressure_range: [35, 55]
+    - id: "COMPRESSOR_1"
+      temperature_range: [50, 95]
+      vibration_range: [3, 10]
+      pressure_range: [25, 60]
+  interval_seconds: 2
+
+logging:
+  level: "INFO"
+  log_dir: "logs"
+  max_file_size_mb: 10
+  backup_count: 5
+  format: "json"  # "json" or "text"
+
+ai_engine:
+  cycle_seconds: 5           # analysis runs every N seconds
+  buffer_size: 200           # rolling buffer per machine/parameter
+  zscore_threshold: 2.5      # Z-score anomaly threshold (σ)
+  if_contamination: 0.05     # Isolation Forest contamination ratio
+  prediction_horizon: 300    # forecast horizon in seconds (5 min)
+  anomaly_ttl_seconds: 60    # keep anomalies visible for N seconds
+
+modbus:
+  host: "192.168.1.12"       # Modbus PLC IP Address (ABB PM5032)
+  port: 502                  # Standard Modbus TCP port
+  slave_id: 1                # Unit ID / Slave ID
+  interval_seconds: 2        # Polling frequency
+  tags:                      # Mapping of Holding Registers to metrics
+    - name: "temperature"
+      address: 40001
+      machine_id: "MOTOR_1"
+      scaling: 0.1
+    - name: "vibration"
+      address: 40002
+      machine_id: "MOTOR_1"
+      scaling: 0.01
+    - name: "pressure"
+      address: 40003
+      machine_id: "MOTOR_1"
+      scaling: 1.0
+    - name: "speed"
+      address: 40004
+      machine_id: "MOTOR_1"
+      scaling: 1.0
+    - name: "temperature"
+      address: 40011
+      machine_id: "PUMP_1"
+      scaling: 0.1
+    - name: "vibration"
+      address: 40012
+      machine_id: "PUMP_1"
+      scaling: 0.01
+    - name: "pressure"
+      address: 40013
+      machine_id: "PUMP_1"
+      scaling: 1.0
+    - name: "flow_rate"
+      address: 40014
+      machine_id: "PUMP_1"
+      scaling: 0.1
+    - name: "temperature"
+      address: 40021
+      machine_id: "COMPRESSOR_1"
+      scaling: 0.1
+    - name: "vibration"
+      address: 40022
+      machine_id: "COMPRESSOR_1"
+      scaling: 0.01
+    - name: "pressure"
+      address: 40023
+      machine_id: "COMPRESSOR_1"
+      scaling: 1.0
+    - name: "power_draw"
+      address: 40024
+      machine_id: "COMPRESSOR_1"
+      scaling: 0.1
+    # Status / Boolean flags (mapped to holding registers for testing)
+    - name: "motor_running"
+      address: 40005
+      machine_id: "MOTOR_1"
+      scaling: 1.0
+    - name: "pump_running"
+      address: 40015
+      machine_id: "PUMP_1"
+      scaling: 1.0
+    - name: "compressor_running"
+      address: 40025
+      machine_id: "COMPRESSOR_1"
+      scaling: 1.0
+    - name: "motor_alarm"
+      address: 40006
+      machine_id: "MOTOR_1"
+      scaling: 1.0
+    - name: "pump_alarm"
+      address: 40016
+      machine_id: "PUMP_1"
+      scaling: 1.0
+    - name: "compressor_alarm"
+      address: 40026
+      machine_id: "COMPRESSOR_1"
+      scaling: 1.0
+    - name: "system_heartbeat"
+      address: 40099
+      machine_id: "SYSTEM"
+      scaling: 1.0
+    - name: "uptime_seconds"
+      address: 40100
+      machine_id: "SYSTEM"
+      scaling: 1.0

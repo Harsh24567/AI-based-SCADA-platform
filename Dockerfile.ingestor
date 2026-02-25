@@ -1,0 +1,14 @@
+# MQTT Ingestion Service — Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY configs/ configs/
+COPY models/ models/
+COPY utils/ utils/
+COPY ingestion/ ingestion/
+
+CMD ["python", "ingestion/mqtt_ingestor.py"]

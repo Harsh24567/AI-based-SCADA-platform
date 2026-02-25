@@ -1,0 +1,14 @@
+# Sensor Simulator — Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY configs/ configs/
+COPY models/ models/
+COPY utils/ utils/
+COPY data_simulator/ data_simulator/
+
+CMD ["python", "data_simulator/sensor_simulator.py"]

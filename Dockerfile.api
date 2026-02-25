@@ -1,0 +1,17 @@
+# SCADA Core API — Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY configs/ configs/
+COPY models/ models/
+COPY utils/ utils/
+COPY scada_core/ scada_core/
+COPY data_sources/ data_sources/
+
+EXPOSE 8000
+
+CMD ["uvicorn", "scada_core.main:app", "--host", "0.0.0.0", "--port", "8000"]
