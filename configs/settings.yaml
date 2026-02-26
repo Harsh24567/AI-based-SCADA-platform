@@ -80,7 +80,7 @@ ai_engine:
   anomaly_ttl_seconds: 60    # keep anomalies visible for N seconds
 
 modbus:
-  host: "192.168.1.12"       # Modbus PLC IP Address (ABB PM5032)
+  host: "192.168.1.15"       # Modbus PLC IP Address (ABB PM5032)
   port: 502                  # Standard Modbus TCP port
   slave_id: 1                # Unit ID / Slave ID
   interval_seconds: 2        # Polling frequency

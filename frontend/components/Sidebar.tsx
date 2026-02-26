@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X, Activity, AlertTriangle, BarChart3, Settings, LogOut, TrendingUp } from 'lucide-react';
+import { Menu, X, Activity, AlertTriangle, BarChart3, Settings, LogOut, TrendingUp, BrainCircuit } from 'lucide-react';
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
@@ -22,6 +22,7 @@ export default function Sidebar() {
     { href: '/machines', label: 'Machines', icon: BarChart3 },
     { href: '/alarms', label: 'Alarms', icon: AlertTriangle },
     { href: '/history', label: 'History', icon: TrendingUp },
+    { href: '/ai-assistant', label: 'AI Assistant', icon: BrainCircuit },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
 

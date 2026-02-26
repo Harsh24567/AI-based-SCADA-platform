@@ -10,7 +10,8 @@ import AlarmPanel from '@/components/dashboard/AlarmPanel';
 import GaugePanel from '@/components/dashboard/GaugePanel';
 import HealthScore from '@/components/dashboard/HealthScore';
 import AIInsightsPanel from '@/components/dashboard/AIInsightsPanel';
-import { ChatPanel } from '@/components/dashboard/ChatPanel';
+import Link from 'next/link';
+import { BrainCircuit } from 'lucide-react';
 import { useRealTimeData } from '@/hooks/useRealTimeData';
 
 function DashboardContent() {
@@ -72,7 +73,21 @@ function DashboardContent() {
             />
             <GaugePanel metrics={metrics} />
             <AlarmPanel alarms={alarms} />
-            <ChatPanel />
+            {/* AI Assistant shortcut card */}
+            <Link href="/ai-assistant" className="block">
+              <div className="glass-lg p-5 rounded-xl border border-white/[0.1] hover:border-accent/40 hover:bg-white/[0.06] transition-all duration-200 cursor-pointer group">
+                <div className="flex items-center gap-3 mb-2">
+                  <BrainCircuit className="w-5 h-5 text-accent group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-semibold text-foreground">AI Assistant</span>
+                </div>
+                <p className="text-xs text-muted-foreground font-light">
+                  Ask questions, get analytics &amp; visual insights about your machines.
+                </p>
+                <div className="mt-3 text-xs text-accent font-medium group-hover:underline">
+                  Open AI Assistant →
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

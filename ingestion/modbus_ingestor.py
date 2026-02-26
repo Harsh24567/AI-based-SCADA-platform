@@ -1,16 +1,3 @@
-"""
-AI SCADA Platform — Modbus Ingestion Service
-
-Polls Modbus PLC, validates payloads via SensorReading models,
-and writes the data to InfluxDB.
-Features:
-    - Periodic polling based on config
-    - Pydantic payload validation
-    - Seamless InfluxDB integration
-    - Structured JSON logging
-    - Graceful shutdown handling
-"""
-
 import sys
 import os
 import signal
@@ -28,7 +15,6 @@ from configs.config_loader import get_config
 from data_sources.modbus_source import ModbusDataSource
 from utils.logger import setup_logging, get_logger
 
-# ── Initialize ──────────────────────────────────────────────
 config = get_config()
 setup_logging(
     level=config.logging.level,
@@ -39,7 +25,6 @@ setup_logging(
 )
 logger = get_logger("modbus_ingestion")
 
-# ── Metrics ─────────────────────────────────────────────────
 metrics = {
     "polls_attempted": 0,
     "polls_successful": 0,
@@ -50,7 +35,6 @@ metrics = {
 }
 metrics_lock = threading.Lock()
 
-# ── InfluxDB Connection ────────────────────────────────────
 def connect_influxdb(max_retries: int = 5, base_delay: float = 2.0):
     """Connect to InfluxDB with retry logic."""
     for attempt in range(1, max_retries + 1):
@@ -84,7 +68,6 @@ def connect_influxdb(max_retries: int = 5, base_delay: float = 2.0):
 influx_client = connect_influxdb()
 write_api = influx_client.write_api(write_options=SYNCHRONOUS)
 
-# ── Graceful Shutdown ───────────────────────────────────────
 shutdown_event = threading.Event()
 
 def signal_handler(signum, frame):
@@ -95,7 +78,6 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
-# ── Main Loop ──────────────────────────────────────────────
 def main():
     """Start the Modbus ingestion loop."""
     logger.info("=" * 60)
@@ -118,7 +100,6 @@ def main():
              with metrics_lock:
                  metrics["polls_attempted"] += 1
              
-             # Attempt reconnect if dropped
              if not source.is_connected():
                   source.connect()
                   
@@ -166,7 +147,6 @@ def main():
                  with metrics_lock:
                      metrics["polls_failed"] += 1
              
-             # Sleep until next interval
              elapsed = time.time() - start_time
              sleep_time = max(0, config.modbus.interval_seconds - elapsed)
              shutdown_event.wait(timeout=sleep_time)
@@ -179,7 +159,6 @@ def main():
         influx_client.close()
         logger.info("Modbus ingestion service stopped")
 
-        # Print final metrics
         with metrics_lock:
             logger.info(f"Final metrics: {metrics}")
 

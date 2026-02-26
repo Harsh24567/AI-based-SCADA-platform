@@ -11,6 +11,8 @@ from configs.config_loader import get_config
 
 config = get_config()
 
+TAG_MACHINE_ID = "machine_id"   # The InfluxDB tag key for machine identifier
+
 def get_influx_client():
     return InfluxDBClient(
         url=config.influxdb.url,
@@ -107,7 +109,7 @@ def get_active_alarms() -> List[Dict]:
     for table in result:
         for record in table.records:
             alarms.append({
-                "machine_id": record["machine_id"],
+                "machine_id": record[TAG_MACHINE_ID],
                 "severity": record["severity"],
                 "message": record.get_value(),
                 "time": record.get_time().isoformat()
@@ -115,3 +117,53 @@ def get_active_alarms() -> List[Dict]:
             
     client.close()
     return alarms
+
+
+def query_time_series(machine_id: str, metric: str, minutes: int = 30) -> Dict:
+    """
+    Returns time-series data points for a specific metric on a machine,
+    suitable for plotting charts. Returns a list of {time, value} dicts.
+    Args:
+        machine_id: The machine identifier (e.g. MOTOR_1)
+        metric: The field name to chart (e.g. temperature, current)
+        minutes: How many minutes of history to retrieve (default 30)
+    """
+    client = get_influx_client()
+    query_api = client.query_api()
+
+    query = f'''
+    from(bucket: "{config.influxdb.bucket}")
+      |> range(start: -{minutes}m)
+      |> filter(fn: (r) => r["_measurement"] == "{config.scada.measurement}")
+      |> filter(fn: (r) => r["{TAG_MACHINE_ID}"] == "{machine_id}")
+      |> filter(fn: (r) => r["_field"] == "{metric}")
+      |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)
+    '''
+
+    result = query_api.query(query)
+    series = []
+    for table in result:
+        for record in table.records:
+            series.append({
+                "time": record.get_time().strftime("%H:%M"),
+                "value": round(record.get_value(), 3) if record.get_value() is not None else None
+            })
+
+    client.close()
+
+    if not series:
+        return {"error": f"No time-series data for {machine_id}/{metric} in last {minutes} min"}
+
+    values = [p["value"] for p in series if p["value"] is not None]
+    return {
+        "machine_id": machine_id,
+        "metric": metric,
+        "minutes": minutes,
+        "series": series,
+        "summary": {
+            "avg": round(sum(values) / len(values), 3),
+            "max": round(max(values), 3),
+            "min": round(min(values), 3),
+            "count": len(values)
+        }
+    }

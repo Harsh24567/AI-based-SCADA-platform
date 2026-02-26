@@ -1,7 +1,3 @@
-"""
-Simple Modbus TCP Server Simulator for Testing
-"""
-
 import asyncio
 import logging
 from pymodbus.server import StartAsyncTcpServer
@@ -13,7 +9,6 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 
 async def run_server():
-    # Initialize data store for pymodbus 3.x
     store = ModbusDeviceContext(
         di=ModbusSequentialDataBlock(0, [0] * 100),
         co=ModbusSequentialDataBlock(0, [0] * 100),
@@ -25,7 +20,6 @@ async def run_server():
 
     log.info("Starting Modbus TCP Simulator on localhost:5020")
     
-    # We use 5020 here as 502 typically requires root privileges
     await StartAsyncTcpServer(
         context=context,
         address=("127.0.0.1", 5020),
