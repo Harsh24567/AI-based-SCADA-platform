@@ -1,6 +1,6 @@
 influxdb:
   url: "http://localhost:8086"
-  token: "3oqYo8mzYtBEkU-QdDIc4ydrSM50lanDQRbL1t-DCLlGL9vR68B5arJ_KGkgI6jQ9cnk74mJzcS4baE63mLQ2Q=="
+  token: "tXO3SkSduNRLWvA0gqOFbfBC67ixEfL5vBzFUdwXimvYc8i65DwP9zxlKkhV95S4n80Fq8fKyBWcL8mm1WBX9Q=="
   org: "ELECSOL"
   bucket: "ELEC1"
   timeout: 10000  # milliseconds
@@ -62,6 +62,66 @@ simulator:
       temperature_range: [50, 95]
       vibration_range: [3, 10]
       pressure_range: [25, 60]
+    - id: "MOTOR_2"
+      temperature_range: [60, 90]
+      vibration_range: [2, 8]
+      pressure_range: [30, 50]
+    - id: "PUMP_2"
+      temperature_range: [40, 75]
+      vibration_range: [1, 6]
+      pressure_range: [35, 55]
+    - id: "COMPRESSOR_2"
+      temperature_range: [50, 95]
+      vibration_range: [3, 10]
+      pressure_range: [25, 60]
+    - id: "CONVEYOR_1"
+      temperature_range: [30, 60]
+      vibration_range: [1, 5]
+      pressure_range: [10, 20]
+    - id: "CONVEYOR_2"
+      temperature_range: [30, 60]
+      vibration_range: [1, 5]
+      pressure_range: [10, 20]
+    - id: "OVEN_1"
+      temperature_range: [150, 250]
+      vibration_range: [0, 2]
+      pressure_range: [10, 15]
+    - id: "OVEN_2"
+      temperature_range: [150, 250]
+      vibration_range: [0, 2]
+      pressure_range: [10, 15]
+    - id: "CHILLER_1"
+      temperature_range: [5, 20]
+      vibration_range: [2, 6]
+      pressure_range: [40, 65]
+    - id: "MIXER_1"
+      temperature_range: [40, 80]
+      vibration_range: [4, 12]
+      pressure_range: [20, 40]
+    - id: "EXTRUDER_1"
+      temperature_range: [180, 220]
+      vibration_range: [2, 7]
+      pressure_range: [50, 80]
+    - id: "PRESS_1"
+      temperature_range: [50, 85]
+      vibration_range: [3, 9]
+      pressure_range: [100, 150]
+    - id: "ROBOT_1"
+      temperature_range: [35, 60]
+      vibration_range: [1, 4]
+      pressure_range: [5, 15]
+    - id: "CNC_1"
+      temperature_range: [40, 70]
+      vibration_range: [2, 8]
+      pressure_range: [20, 35]
+    - id: "GENERATOR_1"
+      temperature_range: [70, 110]
+      vibration_range: [5, 15]
+      pressure_range: [45, 75]
+    - id: "BOILER_1"
+      temperature_range: [120, 180]
+      vibration_range: [1, 3]
+      pressure_range: [80, 120]
   interval_seconds: 2
 
 logging:
@@ -80,7 +140,7 @@ ai_engine:
   anomaly_ttl_seconds: 60    # keep anomalies visible for N seconds
 
 modbus:
-  host: "192.168.1.15"       # Modbus PLC IP Address (ABB PM5032)
+  host: "192.168.1.15"   # Found via network scan
   port: 502                  # Standard Modbus TCP port
   slave_id: 1                # Unit ID / Slave ID
   interval_seconds: 2        # Polling frequency

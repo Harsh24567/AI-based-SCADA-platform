@@ -55,6 +55,21 @@ const MACHINE_LABELS: Record<string, string> = {
   MOTOR_1: 'Motor Unit 1',
   PUMP_1: 'Pump Station 1',
   COMPRESSOR_1: 'Compressor 1',
+  MOTOR_2: 'Motor Unit 2',
+  PUMP_2: 'Pump Station 2',
+  COMPRESSOR_2: 'Compressor 2',
+  CONVEYOR_1: 'Conveyor Belt 1',
+  CONVEYOR_2: 'Conveyor Belt 2',
+  OVEN_1: 'Curing Oven 1',
+  OVEN_2: 'Curing Oven 2',
+  CHILLER_1: 'Cooling Chiller 1',
+  MIXER_1: 'Industrial Mixer 1',
+  EXTRUDER_1: 'Plastic Extruder 1',
+  PRESS_1: 'Hydraulic Press 1',
+  ROBOT_1: 'Assembly Robot 1',
+  CNC_1: 'CNC Milling Machine 1',
+  GENERATOR_1: 'Backup Generator 1',
+  BOILER_1: 'Steam Boiler 1',
 };
 
 function buildMachinesFromReadings(readings: SensorReading[]): Machine[] {

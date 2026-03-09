@@ -16,9 +16,12 @@ from .tools import (
     get_active_alarms,
     query_time_series,
 )
+from .predictive_tools import analyse_health, predict_time_to_failure
+from .report_tools import generate_shift_report
 
 # Models to try in order — the first one that works is used
 FALLBACK_MODELS = [
+    "gemini-1.5-flash",
     "gemini-2.5-flash",
     "gemini-flash-latest",
     "gemini-pro-latest",
@@ -26,12 +29,17 @@ FALLBACK_MODELS = [
 
 SYSTEM_INSTRUCTION = (
     "You are the ELECSOL SCADA AI Assistant for an industrial factory. "
-    "You have access to real-time PLC sensor data via tools. "
-    "Always call the appropriate tool to get live data before answering. "
-    "When asked for statistics or trends on a machine, call query_time_series "
-    "to get chart data AND query_historical_stats to get numeric stats. "
-    "Format your text responses clearly with bullet points where appropriate. "
-    "Be concise and professional."
+    "Your primary job is to answer control room queries accurately and concisely. "
+    "DO NOT HALLUCINATE DATA. "
+    "Available active Machines: 'MOTOR_1'. "
+    "Available valid metrics: 'temperature', 'pressure', 'vibration', 'current', 'voltage'. "
+    "When a user asks about a machine (e.g. 'compressor 1' or 'the machine'), ALWAYS assume 'MOTOR_1' and do not ask for clarification. "
+    "If the user asks for a chart or graph, YOU MUST CALL 'query_time_series'. "
+    "If the user asks for statistics, YOU MUST CALL 'query_historical_stats'. "
+    "If the user asks about machine health, anomalies, or predictions, YOU MUST CALL 'analyse_health' or 'predict_time_to_failure'. "
+    "If the user asks to generate a shift report or a PDF report, YOU MUST CALL 'generate_shift_report'. When you do, tell the user the report was generated and to use the download link provided below the chat. "
+    "DO NOT output arrays of numbers or raw statistics in your text if you called a charting tool. "
+    "Keep your text response incredibly short (1-2 sentences), as the chart itself will be rendered below your text."
 )
 
 
@@ -50,6 +58,9 @@ class SCADAAgent:
             query_historical_stats,
             get_active_alarms,
             query_time_series,
+            analyse_health,
+            predict_time_to_failure,
+            generate_shift_report,
         ]
 
     def _resolve_model(self) -> str:
@@ -64,66 +75,73 @@ class SCADAAgent:
                 return model
             except Exception:
                 continue
-        # Last resort — let the first attempt fail naturally with a clear error
+        # Last resort
         return FALLBACK_MODELS[0]
 
+    def _build_history(self, history: List[Dict]) -> List[genai_types.Content]:
+        """Convert frontend history dictionary to genai Content objects."""
+        contents = []
+        if history:
+            for msg in history:
+                role = "user" if msg.get("role") == "user" else "model"
+                contents.append(
+                    genai_types.Content(
+                        role=role, 
+                        parts=[genai_types.Part.from_text(text=msg.get("content", ""))]
+                    )
+                )
+        return contents
+
     def ask(self, message: str, history: List[Dict] = None) -> str:
-        """Plain text Q&A using Gemini with auto tool calling."""
+        """Plain text Q&A using Gemini Chat with auto tool calling."""
         try:
-            response = self.client.models.generate_content(
+            chat = self.client.chats.create(
                 model=self.model_id,
-                contents=message,
                 config={
                     "tools": self.tools,
                     "system_instruction": SYSTEM_INSTRUCTION,
+                    "temperature": 0.2,
                 },
+                history=self._build_history(history)
             )
+            response = chat.send_message(message)
             return response.text or "I could not generate a response. Please try again."
         except Exception as e:
             return f"Error: {str(e)}"
 
     def analyse(self, message: str, history: List[Dict] = None) -> Dict:
-        """
-        Rich analytics response. Returns a dict with:
-            {
-              "text": str,            # narrative explanation
-              "chart_data": [...],    # [{time, value}, ...] or []
-              "chart_title": str,     # e.g. "MOTOR_1 — temperature (last 30 min)"
-              "stats": {...}          # avg, max, min, count or {}
-            }
-        """
+        """Rich analytics response leveraging auto tool execution and history parsing."""
         try:
-            # First, get a plain answer which may include tool call results
-            response = self.client.models.generate_content(
+            chat = self.client.chats.create(
                 model=self.model_id,
-                contents=message,
                 config={
                     "tools": self.tools,
-                    "system_instruction": (
-                        SYSTEM_INSTRUCTION
-                        + " When asked to describe or analyse a machine, you MUST call "
-                        "query_time_series to get chart data, and query_historical_stats "
-                        "for numeric stats. Include both in your response tools."
-                    ),
+                    "system_instruction": SYSTEM_INSTRUCTION,
+                    "temperature": 0.1,  # Ultra strict
                 },
+                history=self._build_history(history)
             )
-
+            
+            response = chat.send_message(message)
             text = response.text or "Analysis complete."
 
-            # Detect if tool results embedded chart/stats data in the raw response
             chart_data = []
             chart_title = ""
             stats = {}
 
-            # Walk function_calls from the response to extract chart / stats data
-            for candidate in (response.candidates or []):
-                for part in (candidate.content.parts if candidate.content else []):
+            # Parse history backwards to find the last tool execution
+            for msg in reversed(list(chat.get_history())):
+                if not msg.parts:
+                    continue
+                for part in msg.parts:
                     if hasattr(part, "function_response") and part.function_response:
                         fn_name = part.function_response.name
-                        fn_result = part.function_response.response
+                        # Note: In google-genai, response is wrapped in {'result': ...}
+                        raw_result = part.function_response.response
+                        fn_result = raw_result.get("result", raw_result) if isinstance(raw_result, dict) else raw_result
 
-                        if fn_name == "query_time_series" and isinstance(fn_result, dict):
-                            if "series" in fn_result:
+                        if isinstance(fn_result, dict):
+                            if fn_name == "query_time_series" and "series" in fn_result and not chart_data:
                                 chart_data = fn_result["series"]
                                 chart_title = (
                                     f"{fn_result.get('machine_id', '')} — "
@@ -131,9 +149,8 @@ class SCADAAgent:
                                     f"(last {fn_result.get('minutes', 30)} min)"
                                 )
                                 stats = fn_result.get("summary", {})
-
-                        elif fn_name == "query_historical_stats" and isinstance(fn_result, dict):
-                            if not stats and "avg" in fn_result:
+                                
+                            elif fn_name == "query_historical_stats" and "avg" in fn_result and not stats:
                                 stats = {
                                     "avg": fn_result.get("avg"),
                                     "max": fn_result.get("max"),
@@ -145,6 +162,10 @@ class SCADAAgent:
                                         f"{fn_result.get('machine_id', '')} — "
                                         f"{fn_result.get('metric', '')} stats"
                                     )
+
+                # If we found chart data, stop walking backward
+                if chart_data or stats:
+                    break
 
             return {
                 "text": text,

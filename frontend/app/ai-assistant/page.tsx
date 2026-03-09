@@ -35,6 +35,7 @@ interface Message {
     chart_data?: ChartData[];
     chart_title?: string;
     stats?: Stats;
+    download_url?: string;
     loading?: boolean;
 }
 
@@ -56,6 +57,7 @@ function StatCard({ label, value, icon: Icon, color }: {
 function AssistantMessage({ msg }: { msg: Message }) {
     const hasChart = msg.chart_data && msg.chart_data.length > 0;
     const hasStats = msg.stats && Object.keys(msg.stats).length > 0;
+    const hasDownloadUrl = !!msg.download_url;
 
     return (
         <div className="flex justify-start gap-3 max-w-full">
@@ -67,6 +69,29 @@ function AssistantMessage({ msg }: { msg: Message }) {
                 <div className="glass-sm rounded-xl p-4 border border-white/[0.1] text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                     {msg.content}
                 </div>
+
+                {/* PDF Download Button */}
+                {hasDownloadUrl && (
+                    <div className="glass-sm rounded-xl p-4 border border-accent/40 bg-accent/5">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-accent" />
+                                <div>
+                                    <h4 className="text-sm font-semibold text-foreground">Shift Report Ready</h4>
+                                    <p className="text-xs text-muted-foreground font-light">Your PDF report has been generated successfully.</p>
+                                </div>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-accent text-accent hover:bg-accent/10"
+                                onClick={() => window.open(`${API_BASE}${msg.download_url}`, '_blank')}
+                            >
+                                Download PDF
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Stats cards */}
                 {hasStats && (
@@ -188,6 +213,7 @@ function AIAssistantContent() {
                     chart_data: data.chart_data || [],
                     chart_title: data.chart_title || '',
                     stats: data.stats || {},
+                    download_url: data.download_url || undefined,
                 },
             ]);
         } catch (error) {
@@ -296,10 +322,14 @@ function AIAssistantContent() {
     );
 }
 
+import ClientOnly from '@/components/ClientOnly';
+
 export default function AIAssistantPage() {
     return (
         <ProtectedRoute>
-            <AIAssistantContent />
+            <ClientOnly>
+                <AIAssistantContent />
+            </ClientOnly>
         </ProtectedRoute>
     );
 }

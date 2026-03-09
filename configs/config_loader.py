@@ -10,7 +10,7 @@ import yaml
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Resolve project root (two levels up from configs/)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

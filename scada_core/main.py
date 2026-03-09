@@ -35,6 +35,7 @@ from scada_core.auth import (
 )
 from ai_engine.engine import create_engine, get_engine
 from scada_core.chatbot_router import router as chatbot_router
+from scada_core.reports_router import router as reports_router
 
 # ── Initialize ──────────────────────────────────────────────
 config = get_config()
@@ -112,6 +113,7 @@ app.add_middleware(
 )
 
 app.include_router(chatbot_router)
+app.include_router(reports_router)
 
 
 # ══════════════════════════════════════════════════════════
