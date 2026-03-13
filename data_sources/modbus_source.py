@@ -55,38 +55,39 @@ class ModbusDataSource(DataSourceBase):
         # A simple check; more robust would be a test read
         return self.connected
 
-    def _read_register(self, address: int) -> Optional[int]:
-        """Read a single holding register."""
-        if not self.is_connected():
-            return None
-        
+    def get_latest_reading(self, machine_id: Optional[str] = None) -> list[SensorReading]:
+        """
+        Get the most recent readings from the PLC mapping using a block read to minimize network latency.
+        """
+        if not self.is_connected() or not self.modbus_cfg.tags:
+            return []
+
+        # Find min and max address to define the block to read
+        addresses = [tag.address for tag in self.modbus_cfg.tags]
+        min_addr = min(addresses)
+        max_addr = max(addresses)
+        count = max_addr - min_addr + 1
+
+        if count > 125:
+             logger.warning(f"Block read count ({count}) exceeds typical Modbus limit of 125 registers. Splitting may be required in the future.")
+
         try:
             # subtract 40001, typical 1-based holding register mapping offset
-            # (or use 0-based if specified address is already 0-based).
-            # Assuming 4000X format, address = 40001 -> Modbus offset 0
-            modbus_address = address - 40001 if address >= 40001 else address
+            modbus_address = min_addr - 40001 if min_addr >= 40001 else min_addr
             
             result = self.client.read_holding_registers(
                 address=modbus_address,
-                count=1,
+                count=count,
                 device_id=self.modbus_cfg.slave_id
             )
             
             if result.isError():
-                logger.error(f"Modbus read error at {address}: {result}")
-                return None
+                logger.error(f"Modbus block read error at {min_addr} (count {count}): {result}")
+                return []
                 
-            return result.registers[0]
-            
+            registers = result.registers
         except Exception as e:
-            logger.error(f"Modbus exception reading {address}: {e}")
-            return None
-
-    def get_latest_reading(self, machine_id: Optional[str] = None) -> list[SensorReading]:
-        """
-        Get the most recent readings from the PLC mapping.
-        """
-        if not self.is_connected():
+            logger.error(f"Modbus exception during block read: {e}")
             return []
 
         # Group tags by machine_id to produce complete SensorReadings
@@ -96,10 +97,11 @@ class ModbusDataSource(DataSourceBase):
             if machine_id and tag.machine_id != machine_id:
                 continue
                 
-            val = self._read_register(tag.address)
-            if val is None:
+            offset = tag.address - min_addr
+            if offset >= len(registers):
                 continue
                 
+            val = registers[offset]
             scaled_val = float(val) * tag.scaling
             
             if tag.machine_id not in machine_data:
@@ -137,3 +139,4 @@ class ModbusDataSource(DataSourceBase):
     @property
     def source_type(self) -> str:
         return "modbus"
+

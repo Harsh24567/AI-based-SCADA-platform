@@ -34,3 +34,5 @@ pymodbus>=3.8.0
 openai>=1.63.2
 google-generativeai>=0.8.0
 google-genai>=1.0.0
+reportlab>=4.0.0
+matplotlib>=3.8.0

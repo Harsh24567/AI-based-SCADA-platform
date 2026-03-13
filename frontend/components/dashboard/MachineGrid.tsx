@@ -12,66 +12,81 @@ export default function MachineGrid({ machines }: MachineGridProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'online':
-        return 'bg-green-500/20 border-green-500/50 text-green-400';
+        return 'bg-emerald-500/10 border-emerald-500/30 group-hover:border-emerald-500/50';
       case 'warning':
-        return 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400';
+        return 'bg-yellow-500/10 border-yellow-500/30 group-hover:border-yellow-500/50';
       case 'error':
-        return 'bg-red-500/20 border-red-500/50 text-red-400';
+        return 'bg-rose-500/10 border-rose-500/30 group-hover:border-rose-500/50';
       case 'offline':
-        return 'bg-gray-500/20 border-gray-500/50 text-gray-400';
+        return 'bg-slate-500/10 border-slate-500/30 group-hover:border-slate-500/50';
       default:
-        return 'bg-blue-500/20 border-blue-500/50 text-blue-400';
+        return 'bg-cyan-500/10 border-cyan-500/30 group-hover:border-cyan-500/50';
     }
   };
 
   const getStatusDotColor = (status: string) => {
     switch (status) {
       case 'online':
-        return 'text-green-400';
+        return 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]';
       case 'warning':
-        return 'text-yellow-400';
+        return 'bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]';
       case 'error':
-        return 'text-red-400';
+        return 'bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.8)] shadow-[0_0_8px_rgba(251,113,133,0.8)] animate-pulse';
       case 'offline':
-        return 'text-gray-400';
+        return 'bg-slate-400';
       default:
-        return 'text-blue-400';
+        return 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]';
     }
   };
 
   return (
-    <div className="glass-lg glow-primary p-6">
-      <h3 className="text-lg font-light text-foreground mb-6">Machine Status</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+    <div className="relative glass-lg p-6 overflow-hidden border border-white/5 bg-gradient-to-b from-background to-background/50">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-3xl" />
+      
+      <div className="flex items-center gap-2 mb-6 border-b border-white/10 pb-4">
+        <div className="p-1.5 bg-cyan-500/10 border border-cyan-500/30 rounded">
+           <Zap className="w-4 h-4 text-cyan-400" />
+        </div>
+        <h3 className="text-sm font-mono font-medium text-white tracking-widest uppercase">Node Matrix Status</h3>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
         {machines.map((machine) => (
           <div
             key={machine.id}
-            className={`p-4 rounded-lg border transition-all duration-200 hover:border-accent ${getStatusColor(machine.status)}`}
+            className={`relative p-4 rounded border transition-all duration-300 group overflow-hidden ${getStatusColor(machine.status)}`}
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Circle className={`w-3 h-3 ${getStatusDotColor(machine.status)}`} fill="currentColor" />
-                <h4 className="font-semibold text-sm">{machine.name}</h4>
+            <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-white/20" />
+            
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full ${getStatusDotColor(machine.status)}`} />
+                <h4 className="font-mono text-[13px] font-bold text-white tracking-widest uppercase">{machine.name}</h4>
               </div>
-              <span className="text-xs px-2 py-1 bg-background/50 rounded font-mono">
+              <span className="text-[10px] px-1.5 py-0.5 border border-white/10 bg-black/40 text-slate-400 rounded-sm font-mono tracking-widest">
                 {machine.id}
               </span>
             </div>
 
             {machine.status !== 'offline' && (
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="flex items-center gap-1">
-                  <Thermometer className="w-3 h-3 text-orange-400" />
-                  <span className="text-muted-foreground">{Math.round(machine.temperature)}°C</span>
+              <div className="grid grid-cols-3 gap-2 px-2 py-2 rounded bg-black/40 border border-white/5">
+                <div className="flex flex-col items-center gap-1.5 group/stat">
+                  <Thermometer className="w-3.5 h-3.5 text-orange-400 group-hover/stat:scale-110 transition-transform" />
+                  <span className="text-[11px] font-mono text-slate-300">{Math.round(machine.temperature)}°C</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-blue-400" />
-                  <span className="text-muted-foreground">{machine.runtime}h</span>
+                <div className="flex flex-col items-center gap-1.5 group/stat border-x border-white/5">
+                  <Clock className="w-3.5 h-3.5 text-indigo-400 group-hover/stat:scale-110 transition-transform" />
+                  <span className="text-[11px] font-mono text-slate-300">{machine.runtime}h</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-cyan-400" />
-                  <span className="text-muted-foreground">{machine.efficiency}%</span>
+                <div className="flex flex-col items-center gap-1.5 group/stat">
+                  <Zap className="w-3.5 h-3.5 text-cyan-400 group-hover/stat:scale-110 transition-transform" />
+                  <span className="text-[11px] font-mono text-slate-300">{machine.efficiency}%</span>
                 </div>
+              </div>
+            )}
+            {machine.status === 'offline' && (
+              <div className="px-2 py-3 rounded bg-black/40 border border-white/5 flex items-center justify-center">
+                 <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Connection Lost</span>
               </div>
             )}
           </div>

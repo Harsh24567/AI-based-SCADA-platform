@@ -1,6 +1,6 @@
 influxdb:
   url: "http://localhost:8086"
-  token: "tXO3SkSduNRLWvA0gqOFbfBC67ixEfL5vBzFUdwXimvYc8i65DwP9zxlKkhV95S4n80Fq8fKyBWcL8mm1WBX9Q=="
+  token: "elsQjjdASHAEzaXbcsiGKph4LkJwoOvAi1LCH1tO-Y_dARbylZ1oe3TiECNVtDsY0eS26wLHkzNFHot8zr3ZRQ=="
   org: "ELECSOL"
   bucket: "ELEC1"
   timeout: 10000  # milliseconds
@@ -122,7 +122,7 @@ simulator:
       temperature_range: [120, 180]
       vibration_range: [1, 3]
       pressure_range: [80, 120]
-  interval_seconds: 2
+  interval_seconds: 0.2
 
 logging:
   level: "INFO"
@@ -143,7 +143,7 @@ modbus:
   host: "192.168.1.15"   # Found via network scan
   port: 502                  # Standard Modbus TCP port
   slave_id: 1                # Unit ID / Slave ID
-  interval_seconds: 2        # Polling frequency
+  interval_seconds: 0.2        # Polling frequency
   tags:                      # Mapping of Holding Registers to metrics
     - name: "temperature"
       address: 40001

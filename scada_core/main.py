@@ -583,13 +583,15 @@ def ai_health(
     if engine is None:
         raise HTTPException(status_code=503, detail="AI Engine not initialized")
 
-    health = engine.health
+    health = engine.health.copy()
+    health["latest_insight"] = engine.latest_insight
 
     if machine_id and "machines" in health:
         machines = [m for m in health["machines"] if m["machine_id"] == machine_id]
         return {
             "machine_count": len(machines),
             "machines": machines,
+            "latest_insight": engine.latest_insight,
         }
 
     return health

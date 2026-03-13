@@ -11,6 +11,8 @@ COPY models/ models/
 COPY utils/ utils/
 COPY scada_core/ scada_core/
 COPY data_sources/ data_sources/
+COPY ai_engine/ ai_engine/
+COPY chatbot_engine/ chatbot_engine/
 
 EXPOSE 8000
 

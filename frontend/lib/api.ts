@@ -241,6 +241,7 @@ export interface AIHealthResponse {
     worst_machine?: string;
     worst_score?: number;
     machines: AIHealthMachine[];
+    latest_insight?: string;
 }
 
 export async function getAIAnomalies(): Promise<AIAnomaliesResponse> {

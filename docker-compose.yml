@@ -59,6 +59,7 @@ services:
       - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-change-me-in-production}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     depends_on:
       - influxdb
       - mosquitto

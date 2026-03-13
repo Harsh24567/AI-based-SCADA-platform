@@ -25,6 +25,7 @@ from utils.logger import get_logger
 from ai_engine.anomaly_detector import AnomalyDetector, AnomalyResult
 from ai_engine.trend_predictor import TrendPredictor, PredictionResult
 from ai_engine.health_scorer import HealthScorer, HealthScore
+from ai_engine.trainable_agent import TrainableAgent
 
 logger = get_logger("ai_engine")
 config = get_config()
@@ -72,11 +73,13 @@ class AIEngine:
             horizon_seconds=self._cfg["prediction_horizon"],
         )
         self._health_scorer = HealthScorer()
+        self._trainable_agent = TrainableAgent()
 
         # Results store (consumed by API endpoints)
         self.anomalies: list[dict] = []
         self.predictions: list[dict] = []
         self.health: dict = {"system_score": 0, "system_grade": "F", "machines": []}
+        self.latest_insight: Optional[str] = None
 
         # Engine state
         self._running = False
@@ -217,6 +220,16 @@ class AIEngine:
 
         self.health = self._health_scorer.score_system(machine_scores)
 
+        # ── Trainable Agent Insights ────────────────────
+        # Trigger insight generation periodically, or if critical events happen
+        insight = self._trainable_agent.generate_insights(
+            machine_data=self._buffer,
+            anomalies=self.anomalies,
+            health=self.health
+        )
+        if insight is not None:
+             self.latest_insight = insight
+
     # ── Background task ─────────────────────────────────
 
     async def _loop(self):
@@ -281,3 +294,4 @@ def create_engine(influx_client: InfluxDBClient) -> AIEngine:
     global _engine_instance
     _engine_instance = AIEngine(influx_client)
     return _engine_instance
+
